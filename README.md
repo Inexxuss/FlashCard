@@ -21,4 +21,4 @@ Before you can run the Flashcard App, you need to ensure you have a web browser 
 ### Running the Application
 1. **Clone the repository:**
    ```bash
-   git clone [(https://github.com/Inexxuss/FlashCard)]
+   git clone [[https://github.com/Inexxuss/FlashCard]]
