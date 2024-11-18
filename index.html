@@ -4,22 +4,219 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flashcard App</title>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #432E54;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
+        body.dark-mode {
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+        
+        .flashcard.dark-mode {
+            background-color: #333;
+            border: 1px solid #555;
+            color: #ffffff;
+        }
+        
+        .card-front.dark-mode,
+        .card-back.dark-mode {
+            background-color: #333;
+            color: #ffffff; /* Light text for dark mode */
+        }
+
+        .app-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .flashcard-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .flashcard {
+            width: 300px;
+            height: 200px;
+            perspective: 1000px;
+            position: relative;
+        }
+
+        .flashcard-inner {
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            position: relative;
+        }
+
+        .flashcard.flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front,
+        .card-back {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            backface-visibility: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            box-sizing: border-box;
+            border-radius: 10px;
+        }
+
+        .card-front {
+            background-color: #6E5773;
+            color: #fff;
+        }
+
+        .card-back {
+            background-color: #355C7D;
+            color: #fff;
+            transform: rotateY(180deg);
+        }
+
+        .form-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .form-container input,
+        .form-container button {
+            margin: 5px;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+        }
+
+        .form-container button {
+            background-color: #4B4376;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .form-container button:hover {
+            background-color: #3d3867;
+        }
+    </style>
 </head>
 <body>
-    <div class="flashcard-container">
-        <div class="flashcard">
+    <div class="app-container">
+        <header>
+            <h1>Flashcard App</h1>
+            <button id="theme-toggle">Switch to Dark Mode</button>
+        </header>
+        <div class="form-container">
             <input type="text" id="term-input" placeholder="Enter term">
             <input type="text" id="definition-input" placeholder="Enter definition">
-            <div class="threebuttons">
+            <input type="text" id="category-input" placeholder="Enter category (optional)">
             <button id="addBtn">Add Flashcard</button>
-            <button id="toggleBtn">Compilations</button>
-            <button id="exportBtn">Export PDF</button>
-            </div>
         </div>
+        <div class="flashcard-container" id="flashcard-display-container"></div>
     </div>
-    <div id="flashcard-display-container"></div>
-    <div id="compilation"></div>
-    <script src="script.js"></script>
+
+    <script>
+        const flashcards = [];
+        const termInput = document.getElementById('term-input');
+        const definitionInput = document.getElementById('definition-input');
+        const categoryInput = document.getElementById('category-input');
+        const flashcardContainer = document.getElementById('flashcard-display-container');
+        const addBtn = document.getElementById('addBtn');
+        const themeToggle = document.getElementById('theme-toggle');
+
+        function addFlashcard(term, definition) {
+            const flashcardElement = document.createElement('div');
+            flashcardElement.classList.add('flashcard');
+
+            const inner = document.createElement('div');
+            inner.classList.add('flashcard-inner');
+
+            const front = document.createElement('div');
+            front.classList.add('card-front');
+            front.textContent = term;
+
+            const back = document.createElement('div');
+            back.classList.add('card-back');
+            back.textContent = definition;
+
+            inner.appendChild(front);
+            inner.appendChild(back);
+            flashcardElement.appendChild(inner);
+
+            flashcardElement.addEventListener('click', () => {
+                flashcardElement.classList.toggle('flipped');
+            });
+
+            flashcardContainer.appendChild(flashcardElement);
+        }
+
+        addBtn.addEventListener('click', () => {
+            const term = termInput.value.trim();
+            const definition = definitionInput.value.trim();
+            if (term && definition) {
+                addFlashcard(term, definition);
+                termInput.value = '';
+                definitionInput.value = '';
+                categoryInput.value = '';
+            } else {
+                alert('Please fill out both term and definition.');
+            }
+        });
+
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            
+            const flashcardElements = document.querySelectorAll('.flashcard, .card-front, .card-back');
+            flashcardElements.forEach(card => {
+                card.classList.toggle('dark-mode');
+            });
+        
+            themeToggle.textContent = document.body.classList.contains('dark-mode') ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+        });
+        
+        function createFlashcardElement(flashcard) {
+            const flashcardContainer = document.createElement('div');
+            flashcardContainer.classList.add('flashcard');
+        
+            const cardFront = document.createElement('div');
+            cardFront.classList.add('card-front');
+            cardFront.textContent = flashcard.term;
+        
+            const cardBack = document.createElement('div');
+            cardBack.classList.add('card-back');
+            cardBack.textContent = flashcard.definition;
+        
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Edit';
+            editBtn.onclick = () => editFlashcard(flashcardContainer, flashcard);
+        
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.onclick = () => deleteFlashcard(flashcardContainer, flashcard);
+        
+            flashcardContainer.appendChild(cardFront);
+            flashcardContainer.appendChild(cardBack);
+            flashcardContainer.appendChild(editBtn);
+            flashcardContainer.appendChild(deleteBtn);
+            flashcardDisplayContainer.appendChild(flashcardContainer);
+        
+            alignFlashcards();
+        }
+    </script>
 </body>
 </html>
